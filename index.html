@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+   <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -289,11 +289,11 @@ const SLOTS=[
 ];
 
 function startKey(){
-  const d=new Date(); d.setDate(d.getDate()+1); d.setHours(0,0,0,0);
+  const d=new Date(); d.setHours(0,0,0,0);
   return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;
 }
 function endKey(){
-  const d=new Date(); d.setDate(d.getDate()+7); d.setHours(0,0,0,0);
+  const d=new Date(); d.setDate(d.getDate()+6); d.setHours(0,0,0,0);
   return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;
 }
 function isInPeriod(dk){ return dk>=startKey() && dk<=endKey(); }
