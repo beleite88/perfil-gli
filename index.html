@@ -355,7 +355,7 @@ function setSyncAnim(on){document.getElementById('sync-fill').classList.toggle('
 
 function dbg(msg){
   const el=document.getElementById('debug-panel');
-  if(el){ el.style.display='block'; el.innerHTML+='<div>'+msg+'</div>'; }
+  if(el){ el.style.display='block'; el.innerHTML+='<div>'+new Date().toTimeString().slice(0,8)+' '+msg+'</div>'; el.scrollTop=el.scrollHeight; }
   console.log('[GLI]',msg);
 }
 
@@ -391,7 +391,13 @@ function initFirebase(){
 }
 
 // ── RENDER ──
-function render(){renderHeader();renderWeekNav();renderSummary();renderTimeline()}
+function render(){
+  dbg('render() curDk='+curDk+' start='+startKey()+' end='+endKey()+' inPeriod='+isInPeriod(curDk));
+  dbg('allData keys: '+Object.keys(allData).join(', '));
+  const dd=allData[curDk]||{};
+  dbg('slots for curDk: '+Object.keys(dd).join(', '));
+  renderHeader();renderWeekNav();renderSummary();renderTimeline();
+}
 
 function renderHeader(){
   const d=new Date(curDk+'T12:00:00');
