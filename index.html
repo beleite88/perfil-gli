@@ -289,8 +289,8 @@ const SLOTS=[
   {id:'pre_dormir', name:'Antes de dormir',     time:'23:00', desc:'Opcional — apenas se dormir mais de 2h após o jantar', rangeNormal:[75,100], okLabel:'75–100', highLabel:'≥ 101', optional:true},
 ];
 
-function startKey(){ return '2025-06-12'; }
-function endKey(){   return '2025-06-18'; }
+function startKey(){ return '2026-06-12'; }
+function endKey(){   return '2026-06-18'; }
 function isInPeriod(dk){ return dk>=startKey() && dk<=endKey(); }
 function dayNumber(dk){
   const start=new Date(startKey()+'T12:00:00'), cur=new Date(dk+'T12:00:00');
