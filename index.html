@@ -202,6 +202,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     }
   })();
 </script>
+<div id="debug-panel" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:9999;background:rgba(0,0,0,0.85);color:#0f0;font-size:11px;font-family:monospace;padding:8px 12px;max-height:40vh;overflow-y:auto;"></div>
 <div class="shell">
   <div class="sync-bar"><div class="sync-fill" id="sync-fill"></div></div>
   <div class="offline-bar" id="offline-bar">⚠️ Modo offline — dados salvos localmente</div>
@@ -352,10 +353,17 @@ async function remove(dk,sid){
 
 function setSyncAnim(on){document.getElementById('sync-fill').classList.toggle('on',on)}
 
+function dbg(msg){
+  const el=document.getElementById('debug-panel');
+  if(el){ el.style.display='block'; el.innerHTML+='<div>'+msg+'</div>'; }
+  console.log('[GLI]',msg);
+}
+
 function initFirebase(){
   const db=window._db;
+  dbg('initFirebase called. db='+(db?'OK':'NULL'));
   if(!db){
-    console.warn("No Firebase db — using localStorage");
+    dbg('ERROR: No Firebase db — falling back to localStorage');
     allData=loadLocal();
     document.getElementById('offline-bar').classList.add('show');
     document.getElementById('sync-dot').classList.add('offline');
@@ -363,14 +371,17 @@ function initFirebase(){
   }
   useFirebase=true;
   setSyncAnim(true);
+  dbg('Connecting to Firebase Realtime DB...');
   db.ref('glicemia').on('value',(snap)=>{
-    allData=snap.val()||{};
+    const val=snap.val();
+    dbg('Firebase data received. Keys: '+(val?Object.keys(val).join(', '):'(empty)'));
+    allData=val||{};
     setSyncAnim(false);
     document.getElementById('sync-dot').classList.add('live');
     document.getElementById('offline-bar').classList.remove('show');
     render();
   },(err)=>{
-    console.error("Firebase read error:",err);
+    dbg('Firebase ERROR: '+err.code+' — '+err.message);
     allData=loadLocal();
     document.getElementById('offline-bar').classList.add('show');
     document.getElementById('sync-dot').classList.add('offline');
