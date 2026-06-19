@@ -289,7 +289,7 @@ const SLOTS=[
 ];
 
 function startKey(){ return '2026-06-12'; }
-function endKey(){   return '2026-06-18'; }
+function endKey(){   return '2026-06-25'; }
 function isInPeriod(dk){ return dk>=startKey() && dk<=endKey(); }
 function dayNumber(dk){
   const start=new Date(startKey()+'T12:00:00'), cur=new Date(dk+'T12:00:00');
@@ -387,8 +387,8 @@ function renderHeader(){
   const dayN=inPeriod?dayNumber(curDk):null;
   const isToday=curDk===todayKey();
   let title=isToday?'Hoje':d.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'});
-  if(inPeriod&&dayN) title+=(isToday?'':' ')+ ` — Dia ${dayN}/7`;
-  else if(isToday&&inPeriod) title+=' — Dia 1/7';
+  if(inPeriod&&dayN) title+=(isToday?'':' ')+ ` — Dia ${dayN}/${totalDays()}`;
+  else if(isToday&&inPeriod) title+=' — Dia '+dayNumber(todayKey())+'/'+totalDays();
   document.getElementById('h-title').textContent=title;
   const dd=allData[curDk]||{};
   const done=REQUIRED_SLOTS.filter(s=>dd[s.id]?.value!=null).length;
@@ -397,11 +397,16 @@ function renderHeader(){
   document.getElementById('prog-lbl').innerHTML=`<strong>${done}</strong> / ${total}`;
 }
 
+function totalDays(){
+  const s=new Date(startKey()+'T12:00:00'), e=new Date(endKey()+'T12:00:00');
+  return Math.round((e-s)/86400000)+1;
+}
 function renderWeekNav(){
   const nav=document.getElementById('week-nav');nav.innerHTML='';
   const DAYS=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
   const start=new Date(startKey()+'T12:00:00');
-  for(let i=0;i<7;i++){
+  const N=totalDays();
+  for(let i=0;i<N;i++){
     const d=new Date(start);d.setDate(start.getDate()+i);
     const dk=`${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;
     const isCur=dk===curDk,hasData=Object.keys(allData[dk]||{}).length>0;
@@ -535,11 +540,11 @@ function showToast(msg){
 // ── EXPORT XLS ──
 function exportXLS(){
   const rows=[['Data','Dia','Medição','Horário','Resultado (mg/dL)','Status','Refeição','Observação']];
-  const allKeys=Object.keys(allData).sort(); const periodKeys=Array.from({length:7},(_,i)=>{const d=new Date(startKey()+'T12:00:00');d.setDate(d.getDate()+i);return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`}); periodKeys.forEach(dk=>{
+  const allKeys=Object.keys(allData).sort(); const periodKeys=Array.from({length:totalDays()},(_,i)=>{const d=new Date(startKey()+'T12:00:00');d.setDate(d.getDate()+i);return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`}); periodKeys.forEach(dk=>{
     SLOTS.forEach(slot=>{
       const e=(allData[dk]||{})[slot.id],v=e?.value;
       const st=v==null?'—':v<ALERT_LOW?'ALERTA baixo':v>ALERT_HIGH?'ALERTA alto':v<slot.rangeNormal[0]?'Abaixo do alvo':v>slot.rangeNormal[1]?'Acima do alvo':'Normal';
-      rows.push([new Date(dk+'T12:00:00').toLocaleDateString('pt-BR'),`Dia ${dayNumber(dk)}/7`,slot.name+(slot.optional?' (opcional)':''),slot.time,v!=null?v:'—',st,slot.hasMeal?(e?.meal||''):'—',e?.notes||'']);
+      rows.push([new Date(dk+'T12:00:00').toLocaleDateString('pt-BR'),`Dia ${dayNumber(dk)}/${totalDays()}`,slot.name+(slot.optional?' (opcional)':''),slot.time,v!=null?v:'—',st,slot.hasMeal?(e?.meal||''):'—',e?.notes||'']);
     });
   });
   const ws=XLSX.utils.aoa_to_sheet(rows);
@@ -558,7 +563,7 @@ function exportPDF(){
   doc.setTextColor(255,255,255);doc.setFontSize(18);doc.text('Perfil Glicêmico',14,12);
   doc.setFontSize(10);doc.text(`Gerado em ${new Date().toLocaleDateString('pt-BR',{day:'numeric',month:'long',year:'numeric'})}`,14,21);
   let y=36;
-  const keys=Array.from({length:7},(_,i)=>{const d=new Date(startKey()+'T12:00:00');d.setDate(d.getDate()+i);return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`});
+  const keys=Array.from({length:totalDays()},(_,i)=>{const d=new Date(startKey()+'T12:00:00');d.setDate(d.getDate()+i);return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`});
   if(!keys.length){doc.setTextColor(143,173,159);doc.setFontSize(12);doc.text('Nenhuma medição registrada.',14,y)}
   keys.forEach(dk=>{
     const dd=allData[dk]||{};
@@ -566,7 +571,7 @@ function exportPDF(){
     if(y>265){doc.addPage();y=20}
     doc.setFillColor(232,242,236);doc.rect(10,y-4,190,8,'F');
     doc.setTextColor(47,64,57);doc.setFontSize(10);doc.setFont(undefined,'bold');
-    doc.text(`Dia ${dayNumber(dk)}/7 — `+new Date(dk+'T12:00:00').toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long',year:'numeric'}),14,y+1);
+    doc.text(`Dia ${dayNumber(dk)}/${totalDays()} — `+new Date(dk+'T12:00:00').toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long',year:'numeric'}),14,y+1);
     doc.setFont(undefined,'normal');y+=10;
     const rows=SLOTS.filter(s=>dd[s.id]?.value!=null).map(s=>{
       const e=dd[s.id],v=e.value;
